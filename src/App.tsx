@@ -22,6 +22,7 @@ import SellerSettings from './pages/seller/Settings';
 import Search from './pages/Search';
 import Category from './pages/Category';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import AuthDebug from './components/auth/AuthDebug';
 
 function App() {
   return (
@@ -95,6 +96,7 @@ function App() {
                 } />
               </Routes>
             </Layout>
+            <AuthDebug />
             <Toaster 
               position="top-right"
               toastOptions={{
