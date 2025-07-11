@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Store } from 'lucide-react';
+import { Eye, EyeOff, Store, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,7 @@ const SignIn: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -19,31 +20,87 @@ const SignIn: React.FC = () => {
 
   const from = location.state?.from?.pathname || '/';
 
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
+    setErrors({});
 
     try {
-      const { error } = await signIn(formData.email, formData.password);
+      const { data, error } = await signIn(formData.email, formData.password);
       
       if (error) {
-        toast.error(error.message);
-      } else {
+        console.error('Sign in error:', error);
+        toast.error(error.message || 'Failed to sign in');
+        setErrors({ general: error.message || 'Failed to sign in' });
+      } else if (data?.user) {
         toast.success('Welcome back!');
         navigate(from, { replace: true });
+      } else {
+        toast.error('Sign in failed. Please try again.');
+        setErrors({ general: 'Sign in failed. Please try again.' });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Unexpected error:', error);
       toast.error('An unexpected error occurred');
+      setErrors({ general: 'An unexpected error occurred' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
+  const handleDemoLogin = async (role: 'customer' | 'retailer') => {
+    const demoCredentials = {
+      customer: { email: 'demo@customer.com', password: 'demo123' },
+      retailer: { email: 'demo@retailer.com', password: 'demo123' }
+    };
+
+    setFormData(demoCredentials[role]);
+    
+    // Auto-submit after setting demo credentials
+    setTimeout(() => {
+      const form = document.querySelector('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }, 100);
   };
 
   return (
@@ -78,10 +135,18 @@ const SignIn: React.FC = () => {
           className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-sm border"
           onSubmit={handleSubmit}
         >
+          {/* General Error Message */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <span className="text-sm text-red-700">{errors.general}</span>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Email address *
               </label>
               <input
                 id="email"
@@ -91,14 +156,19 @@ const SignIn: React.FC = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className={`mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
+                  errors.email ? 'border-red-300' : 'border-gray-300'
+                }`}
                 placeholder="Enter your email"
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Password *
               </label>
               <div className="mt-1 relative">
                 <input
@@ -109,7 +179,9 @@ const SignIn: React.FC = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  className={`block w-full px-3 py-2 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -124,6 +196,9 @@ const SignIn: React.FC = () => {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
           </div>
 
@@ -146,6 +221,35 @@ const SignIn: React.FC = () => {
               'Sign in'
             )}
           </button>
+
+          {/* Demo Login Section */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Try Demo Accounts</span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('customer')}
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                Demo Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('retailer')}
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                Demo Seller
+              </button>
+            </div>
+          </div>
 
           <div className="mt-6">
             <div className="relative">
