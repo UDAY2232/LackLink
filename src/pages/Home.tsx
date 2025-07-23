@@ -16,6 +16,7 @@ const Home: React.FC = () => {
   }, []);
 
   const fetchHomeData = async () => {
+    setLoading(true);
     try {
       // Fetch categories
       const { data: categoriesData } = await supabase
@@ -39,6 +40,9 @@ const Home: React.FC = () => {
       setFeaturedProducts(productsData || []);
     } catch (error) {
       console.error('Error fetching home data:', error);
+      // Set empty data to prevent infinite loading
+      setCategories([]);
+      setFeaturedProducts([]);
     } finally {
       setLoading(false);
     }
