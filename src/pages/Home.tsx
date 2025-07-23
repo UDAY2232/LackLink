@@ -19,7 +19,7 @@ const Home: React.FC = () => {
     setLoading(true);
     try {
       // Check if Supabase is properly configured
-      if (!supabase) {
+      if (!isSupabaseConfigured) {
         console.warn('Supabase not configured, using fallback data');
         setCategories([]);
         setFeaturedProducts([]);
