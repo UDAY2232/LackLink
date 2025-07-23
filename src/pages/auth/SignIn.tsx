@@ -52,19 +52,22 @@ const SignIn: React.FC = () => {
       
       if (error) {
         console.error('Sign in error:', error);
-        toast.error(error.message || 'Failed to sign in');
-        setErrors({ general: error.message || 'Failed to sign in' });
+        const errorMessage = error.message || 'Failed to sign in';
+        toast.error(errorMessage);
+        setErrors({ general: errorMessage });
       } else if (data?.user) {
         toast.success('Welcome back!');
         navigate(from, { replace: true });
       } else {
-        toast.error('Sign in failed. Please try again.');
-        setErrors({ general: 'Sign in failed. Please try again.' });
+        const errorMessage = 'Sign in failed. Please try again.';
+        toast.error(errorMessage);
+        setErrors({ general: errorMessage });
       }
     } catch (error: any) {
       console.error('Unexpected error:', error);
-      toast.error('An unexpected error occurred');
-      setErrors({ general: 'An unexpected error occurred' });
+      const errorMessage = 'Network error. Please check your connection and try again.';
+      toast.error(errorMessage);
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }

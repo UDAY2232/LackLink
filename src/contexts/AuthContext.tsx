@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User } from '../types';
 import toast from 'react-hot-toast';
 
@@ -74,6 +74,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const ensureUserProfile = async (authUser: SupabaseUser) => {
+    if (!isSupabaseConfigured) {
+      // Create mock user profile for development
+      const mockUser: User = {
+        id: authUser.id,
+        email: authUser.email!,
+        name: authUser.user_metadata?.name || authUser.email!.split('@')[0],
+        role: authUser.user_metadata?.role || 'customer',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setUser(mockUser);
+      return;
+    }
+    
     try {
       console.log('Ensuring user profile for:', authUser.email);
       
@@ -138,6 +152,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const fetchUserProfile = async (userId: string) => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       console.log('Fetching user profile for:', userId);
       
@@ -183,10 +202,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Attempting sign in for:', email);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      // Use the enhanced signIn function from supabase.ts
+      const { data, error } = await import('../lib/supabase').then(module => 
+        module.signIn(email, password)
+      );
 
       if (error) {
         console.error('Sign in error:', error);
@@ -230,16 +249,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {
-          data: {
-            name: userData.name.trim(),
-            role: userData.role || 'customer',
-          },
-        },
-      });
+      // Use the enhanced signUp function from supabase.ts
+      const { data, error } = await import('../lib/supabase').then(module => 
+        module.signUp(email, password, {
+          name: userData.name.trim(),
+          role: userData.role || 'customer',
+        })
+      );
 
       if (error) {
         console.error('Sign up error:', error);
@@ -277,7 +293,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       console.log('Signing out user');
-      const { error } = await supabase.auth.signOut();
+      const { error } = await import('../lib/supabase').then(module => 
+        module.signOut()
+      );
       if (error) {
         console.error('Sign out error:', error);
         throw error;

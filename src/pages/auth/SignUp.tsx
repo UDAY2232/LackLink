@@ -79,19 +79,22 @@ const SignUp: React.FC = () => {
       
       if (error) {
         console.error('Signup error:', error);
-        toast.error(error.message || 'Failed to create account');
-        setErrors({ general: error.message || 'Failed to create account' });
+        const errorMessage = error.message || 'Failed to create account';
+        toast.error(errorMessage);
+        setErrors({ general: errorMessage });
       } else if (data?.user) {
         toast.success('Account created successfully! Welcome to LackLink!');
         navigate('/');
       } else {
-        toast.error('Failed to create account. Please try again.');
-        setErrors({ general: 'Failed to create account. Please try again.' });
+        const errorMessage = 'Failed to create account. Please try again.';
+        toast.error(errorMessage);
+        setErrors({ general: errorMessage });
       }
     } catch (error: any) {
       console.error('Unexpected signup error:', error);
-      toast.error('An unexpected error occurred. Please try again.');
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+      const errorMessage = 'Network error. Please check your connection and try again.';
+      toast.error(errorMessage);
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
