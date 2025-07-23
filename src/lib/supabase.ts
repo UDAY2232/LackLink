@@ -167,6 +167,11 @@ export const getCurrentUser = async () => {
 
 // Test connection function
 export const testConnection = async () => {
+  if (!isSupabaseConfigured) {
+    console.log('Supabase not configured, skipping connection test');
+    return false;
+  }
+  
   try {
     const { data, error } = await supabase.from('categories').select('count').limit(1);
     
