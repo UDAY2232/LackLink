@@ -4,10 +4,13 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing required Supabase environment variables. Please check your .env file.');
+  console.error('Missing Supabase environment variables:', {
+    url: supabaseUrl ? 'Set' : 'Missing',
+    key: supabaseAnonKey ? 'Set' : 'Missing'
+  });
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -19,7 +22,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       'X-Client-Info': 'lacklink-marketplace'
     }
   }
-});
+}) : null;
 
 // Auth helpers with improved error handling
 export const signUp = async (email: string, password: string, userData: any) => {

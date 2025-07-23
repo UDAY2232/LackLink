@@ -18,6 +18,15 @@ const Home: React.FC = () => {
   const fetchHomeData = async () => {
     setLoading(true);
     try {
+      // Check if Supabase is properly configured
+      if (!supabase) {
+        console.warn('Supabase not configured, using fallback data');
+        setCategories([]);
+        setFeaturedProducts([]);
+        setLoading(false);
+        return;
+      }
+
       // Fetch categories
       const { data: categoriesData } = await supabase
         .from('categories')
@@ -39,7 +48,7 @@ const Home: React.FC = () => {
       setCategories(categoriesData || []);
       setFeaturedProducts(productsData || []);
     } catch (error) {
-      console.error('Error fetching home data:', error);
+      console.warn('Error fetching home data, using fallback:', error);
       // Set empty data to prevent infinite loading
       setCategories([]);
       setFeaturedProducts([]);
