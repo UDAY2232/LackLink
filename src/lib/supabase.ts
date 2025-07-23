@@ -165,36 +165,6 @@ export const getCurrentUser = async () => {
   }
 };
 
-export const signOut = async () => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.error('Supabase signOut error:', error);
-    }
-    
-    return { error };
-  } catch (error) {
-    console.error('Unexpected signOut error:', error);
-    return { error };
-  }
-};
-
-export const getCurrentUser = async () => {
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error) {
-      console.error('Error getting current user:', error);
-    }
-    
-    return user;
-  } catch (error) {
-    console.error('Unexpected error getting current user:', error);
-    return null;
-  }
-};
-
 // Test connection function
 export const testConnection = async () => {
   try {
