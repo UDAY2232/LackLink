@@ -168,20 +168,26 @@ export const getCurrentUser = async () => {
 // Test connection function
 export const testConnection = async () => {
   if (!isSupabaseConfigured) {
-    console.log('Supabase not configured, skipping connection test');
+    console.log('Supabase not configured, connection test skipped');
     return false;
   }
   
   try {
-    const { data, error } = await supabase.from('categories').select('count').limit(1);
-    
-    if (error) {
-      console.error('Connection test failed:', error);
+    // Only test connection if we have a real Supabase client
+    if (supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('your-project')) {
+      const { data, error } = await supabase.from('categories').select('count').limit(1);
+      
+      if (error) {
+        console.error('Connection test failed:', error);
+        return false;
+      }
+      
+      console.log('Supabase connection successful');
+      return true;
+    } else {
+      console.log('Using mock Supabase client, connection test skipped');
       return false;
     }
-    
-    console.log('Supabase connection successful');
-    return true;
   } catch (error) {
     console.error('Connection test error:', error);
     return false;
